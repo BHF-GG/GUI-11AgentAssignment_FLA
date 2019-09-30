@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Lab3"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         mc:Ignorable="d"
-        Title="Agent Assignments 1 - Lab 3" Height="450" Width="800"
+        Title="{Binding Title}" Height="450" Width="800"
         Background="{DynamicResource ResourceKey=BackgroundBrush}">
 
     <Window.DataContext>
@@ -196,17 +196,7 @@
                 Style="{StaticResource ResourceKey=BottonToolbarStyle}">
                 <Image Source="../Bitmaps/removeAgent.bmp"/>
             </Button>
-            <Label 
-                Content="Filename:" 
-                FontSize="11"
-                FontWeight="Medium"
-                VerticalAlignment="Center"/>
-            <TextBox Name="tbxFileName"
-                     FontSize="14"
-                     FontWeight="Medium"
-                     VerticalAlignment="Center"
-                     MinWidth="150"/>
-            <Separator Width="Auto" Margin="90,0.4,-0.4,0.4"/>
+            <Separator Width="Auto" Margin="300,0.4,-0.4,0.4"/>
             <Label 
                 Content="Speciality:" 
                 FontSize="11"

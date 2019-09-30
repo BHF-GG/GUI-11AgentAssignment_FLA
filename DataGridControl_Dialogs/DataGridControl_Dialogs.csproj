@@ -79,6 +79,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="Data\Repository.cs" />
     <Compile Include="Models\Agent.cs" />
     <Compile Include="Models\AgentIdToColorValueConverter.cs" />
     <Compile Include="App.xaml.cs">

@@ -15,8 +15,10 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Xml.Serialization;
+using Lab3.Data;
 using Lab3.ViewModels;
 using Lab3.Views;
+using Microsoft.Win32;
 
 namespace Lab3
 {
@@ -24,6 +26,8 @@ namespace Lab3
     {
         private ObservableCollection<Agent> agents;
         private string filename = "";
+        string filePath = "";
+        private string AppTitle = "Agent Assignments 5.3";
 
         //Bruges til filtrering af specialities
         private string filter;
@@ -47,6 +51,7 @@ namespace Lab3
 #endif
             };
             CurrentAgent = null;
+            Title = "Unnamed - " + AppTitle;
 
             //Exercise 4.3.1: Lav comboboks ved specialities
             Specialities = new ObservableCollection<string>
@@ -78,6 +83,13 @@ namespace Lab3
         void Timer_Tick(object sender, EventArgs e)
         {
             Clock.Update();
+        }
+
+        private string title = "hej";
+        public string Title
+        {
+            get { return title; }
+            set { SetProperty(ref title, value); }
         }
 
         ///     Exercise 4.3.1: Lav comboboks ved specialities
@@ -341,46 +353,44 @@ namespace Lab3
         }
 
         ICommand _SaveAsCommand;
-
         public ICommand SaveAsCommand
         {
-            get { return _SaveAsCommand ?? (_SaveAsCommand = new DelegateCommand<string>(SaveAsCommand_Execute)); }
+            get { return _SaveAsCommand ?? (_SaveAsCommand = new DelegateCommand(SaveAsCommand_Execute)); }
         }
 
-        private void SaveAsCommand_Execute(string argFilename)
+        private void SaveAsCommand_Execute()
         {
-            if (argFilename == "")
-            {
-                MessageBox.Show("You must enter a file name in the File Name textbox!", "Unable to save file",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            }
+            var dialog = new SaveFileDialog();
+
+            dialog.Filter = "Agent assignment documents|*.agn|All Files|*.*";
+            dialog.DefaultExt = "agn";
+            if (filePath == "")
+                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             else
+                dialog.InitialDirectory = Path.GetDirectoryName(filePath);
+
+            if (dialog.ShowDialog(App.Current.MainWindow) == true)
             {
-                filename = argFilename;
-                SaveFileCommand_Execute();
+                filePath = dialog.FileName;
+                filename = Path.GetFileName(filePath);
+                SaveFile();
+                Title = filename + " - " + AppTitle;
             }
         }
 
         ICommand _SaveCommand;
-
         public ICommand SaveCommand
         {
             get
             {
-                return _SaveCommand ?? (_SaveCommand =
-                           new DelegateCommand(SaveFileCommand_Execute, SaveFileCommand_CanExecute)
-                               .ObservesProperty(() => Agents.Count));
+                return _SaveCommand ?? (_SaveCommand = new DelegateCommand(SaveFileCommand_Execute, SaveFileCommand_CanExecute)
+                  .ObservesProperty(() => Agents.Count));
             }
         }
 
         private void SaveFileCommand_Execute()
         {
-            // Create an instance of the XmlSerializer class and specify the type of object to serialize.
-            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<Agent>));
-            TextWriter writer = new StreamWriter(filename);
-            // Serialize all the agents.
-            serializer.Serialize(writer, Agents);
-            writer.Close();
+            SaveFile();
         }
 
         private bool SaveFileCommand_CanExecute()
@@ -388,8 +398,21 @@ namespace Lab3
             return (filename != "") && (Agents.Count > 0);
         }
 
-        ICommand _NewFileCommand;
+        private void SaveFile()
+        {
+            try
+            {
+                Repository.SaveFile(filePath, Agents);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Unable to save file", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
+
+
+        ICommand _NewFileCommand;
         public ICommand NewFileCommand
         {
             get { return _NewFileCommand ?? (_NewFileCommand = new DelegateCommand(NewFileCommand_Execute)); }
@@ -397,60 +420,43 @@ namespace Lab3
 
         private void NewFileCommand_Execute()
         {
-            MessageBoxResult res = MessageBox.Show(
-                "Any unsaved data will be lost. Are you sure you want to initiate a new file?", "Warning",
-                MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-            if (res == MessageBoxResult.Yes)
-            {
-                Agents.Clear();
-                filename = "";
-            }
+            Agents.Clear();
+            filename = "";
+            Title = "Unnamed - " + AppTitle;
         }
-
 
         ICommand _OpenFileCommand;
-
         public ICommand OpenFileCommand
         {
-            get
-            {
-                return _OpenFileCommand ?? (_OpenFileCommand = new DelegateCommand<string>(OpenFileCommand_Execute));
-            }
+            get { return _OpenFileCommand ?? (_OpenFileCommand = new DelegateCommand(OpenFileCommand_Execute)); }
         }
 
-        private void OpenFileCommand_Execute(string argFilename)
+        private void OpenFileCommand_Execute()
         {
-            if (argFilename == "")
-            {
+            var dialog = new OpenFileDialog();
 
-                MessageBox.Show("You must enter a file name in the File Name textbox!", "Unable to save file",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            }
+            dialog.Filter = "Agent assignment documents|*.agn|All Files|*.*";
+            dialog.DefaultExt = "agn";
+            if (filePath == "")
+                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             else
-            {
-                filename = argFilename;
-                var tempAgents = new ObservableCollection<Agent>();
+                dialog.InitialDirectory = Path.GetDirectoryName(filePath);
 
-                // Create an instance of the XmlSerializer class and specify the type of object to deserialize.
-                XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<Agent>));
+            if (dialog.ShowDialog(App.Current.MainWindow) == true)
+            {
+                filePath = dialog.FileName;
+                filename = Path.GetFileName(filePath);
                 try
                 {
-                    TextReader reader = new StreamReader(filename);
-                    // Deserialize all the agents.
-                    tempAgents = (ObservableCollection<Agent>) serializer.Deserialize(reader);
-                    reader.Close();
+                    ObservableCollection<Agent> tempAgents;
+                    Repository.ReadFile(filePath, out tempAgents);
+                    Agents = tempAgents;
+                    Title = filename + " - " + AppTitle;
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Unable to open file", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-
-                Agents = tempAgents;
-
-                // We have to insert the agents in the existing collection. 
-                //Agents.Clear();
-                //foreach (var agent in tempAgents)
-                //    Add(agent);
             }
         }
 
