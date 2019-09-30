@@ -116,7 +116,7 @@
                  Grid.Row="2"
                  Text="{Binding Path=CurrentAgent.ID}"
                  Style="{StaticResource JamesStyle}" Grid.Column="1"
-                 />
+        />
         <TextBox Height="23" Margin="25.8,11.4,14,0" Name="textBox2" 
                      VerticalAlignment="Top" Text="{Binding Path=CurrentAgent.CodeName}" Grid.Row="3" 
                      Style="{StaticResource InputStyle}" Grid.Column="1"/>
@@ -136,7 +136,7 @@
                   Grid.Row="4"
                   Style="{StaticResource InputStyle}"
         />
-        <ListBox ItemsSource="{Binding Path=Agents}" 
+        <DataGrid ItemsSource="{Binding Path=Agents}" 
                  SelectedItem="{Binding Path=CurrentAgent}"
                  SelectedIndex="{Binding Path=CurrentIndex}"
                  IsSynchronizedWithCurrentItem="True"
@@ -146,7 +146,7 @@
                  Grid.Row="2"
                  Margin="9,3.6,8.6,38" 
                  Grid.RowSpan="6"  
-                 />
+        />
         <ToolBar
             Grid.Row="1" 
             Grid.ColumnSpan="3" Margin="0,0.4,-0.4,0.4">
@@ -194,22 +194,6 @@
                      VerticalAlignment="Center"
                      MinWidth="150"/>
             <Separator Width="Auto" Margin="90,0.4,-0.4,0.4"/>
-            <Label 
-                Content="Sort order:" 
-                FontSize="11"
-                FontWeight="Medium"
-                VerticalAlignment="Center"
-                Margin="0,0.4,-0.4,0.4"/>
-            
-            <ComboBox Width="100" x:Name="sortOrderCombo" SelectedIndex="0"
-                      FontSize="12" SelectedItem="{Binding SelectedSortOrder}"
-            >
-                <ComboBoxItem Tag="None">None</ComboBoxItem>
-                <ComboBoxItem Tag="ID">ID</ComboBoxItem>
-                <ComboBoxItem Tag="CodeName">CodeName</ComboBoxItem>
-                <ComboBoxItem Tag="Speciality">Speciality</ComboBoxItem>
-                <ComboBoxItem Tag="Assignment">Assignment</ComboBoxItem>
-            </ComboBox>
             <Label 
                 Content="Speciality:" 
                 FontSize="11"
