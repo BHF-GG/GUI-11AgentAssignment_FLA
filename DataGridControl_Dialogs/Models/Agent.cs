@@ -61,6 +61,7 @@ namespace AgentAssignment
             }
         }
 
+
         public string Assignment
         {
             get
@@ -71,6 +72,11 @@ namespace AgentAssignment
             {
                 assignment = value;
             }
+        }
+
+        public Agent Clone()
+        {
+            return this.MemberwiseClone() as Agent;
         }
     }
 }

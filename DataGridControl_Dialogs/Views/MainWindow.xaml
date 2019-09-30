@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lab3"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         mc:Ignorable="d"
         Title="Agent Assignments 1 - Lab 3" Height="450" Width="800"
         Background="{DynamicResource ResourceKey=BackgroundBrush}">
@@ -88,6 +89,8 @@
                 <MenuItem 
                     Header="Add new"
                     Command="{Binding AddNewAgentCommand}"/>
+                <MenuItem Header="_Edit" Command="{Binding Path=EditAgentCommand}"
+                          InputGestureText="ctrl+E"/>
                 <MenuItem 
                     Header="Delete"
                     Command="{Binding DeleteAgentCommand}"/>
@@ -116,10 +119,12 @@
                  Grid.Row="2"
                  Text="{Binding Path=CurrentAgent.ID}"
                  Style="{StaticResource JamesStyle}" Grid.Column="1"
+                 IsReadOnly="True"
         />
         <TextBox Height="23" Margin="25.8,11.4,14,0" Name="textBox2" 
                      VerticalAlignment="Top" Text="{Binding Path=CurrentAgent.CodeName}" Grid.Row="3" 
-                     Style="{StaticResource InputStyle}" Grid.Column="1"/>
+                     Style="{StaticResource InputStyle}" Grid.Column="1"
+                     IsReadOnly="True"/>
         <TextBox Margin="25.4,2.6,14,0" 
                  Name="textBox4" 
                  Text="{Binding Path=CurrentAgent.Assignment}" 
@@ -128,13 +133,14 @@
                  TextWrapping="Wrap"
                  VerticalAlignment="Top" Grid.Row="5" 
                  Style="{StaticResource InputStyle}" Grid.Column="1"
+                 IsReadOnly="True"
         />
-        <ComboBox Margin="25.4,11,14,11"
-                  SelectedItem="{Binding Path=CurrentAgent.Speciality}"
-                  ItemsSource="{Binding Path=Specialities}"
-                  Grid.Column="1"
+        <TextBox Margin="25.4,11,14,11"
+                 Text="{Binding Path=CurrentAgent.Speciality}" 
+                 Grid.Column="1"
                   Grid.Row="4"
                   Style="{StaticResource InputStyle}"
+                  IsReadOnly="True"
         />
         <DataGrid ItemsSource="{Binding Path=Agents}" 
                  SelectedItem="{Binding Path=CurrentAgent}"
@@ -146,17 +152,24 @@
                  Grid.Row="2"
                  Margin="9,3.6,8.6,38" 
                  Grid.RowSpan="6"  
-        />
+                 IsReadOnly="True">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding EditAgentCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </DataGrid>
+
         <ToolBar
             Grid.Row="1" 
-            Grid.ColumnSpan="3" Margin="0,0.4,-0.4,0.4">
+            Grid.ColumnSpan="3" Grid.Column="0" Margin="0,0.4,-0.4,0.4">
             <Button 
                 Height="auto" 
                 ToolTip="Move to previous agent"
                 Width="32"
                 Command="{Binding Path=PreviusCommand}"
                 Style="{StaticResource ResourceKey=BottonToolbarStyle}">
-                <Image Source="Bitmaps/prev.bmp"/>
+                <Image Source="../Bitmaps/prev.bmp"/>
             </Button>
             <Button 
                 Height="auto" 
@@ -165,7 +178,7 @@
                 Width ="32"
                 Style="{StaticResource ResourceKey=BottonToolbarStyle}"
                 >
-                <Image Source="Bitmaps/next.bmp"/>
+                <Image Source="../Bitmaps/next.bmp"/>
             </Button>
             <Button 
                 Height="auto" 
@@ -173,7 +186,7 @@
                 Width="32"
                 Command="{Binding Path=AddNewAgentCommand}"
                 Style="{StaticResource ResourceKey=BottonToolbarStyle}">
-                <Image Source="Bitmaps/addAgent.bmp"/>
+                <Image Source="../Bitmaps/addAgent.bmp"/>
             </Button>
             <Button 
                 Height="auto" 
@@ -181,7 +194,7 @@
                 Width="32"
                 Command="{Binding Path=DeleteAgentCommand}"
                 Style="{StaticResource ResourceKey=BottonToolbarStyle}">
-                <Image Source="Bitmaps/removeAgent.bmp"/>
+                <Image Source="../Bitmaps/removeAgent.bmp"/>
             </Button>
             <Label 
                 Content="Filename:" 

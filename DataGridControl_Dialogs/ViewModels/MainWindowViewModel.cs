@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using System.Xml.Serialization;
+using Lab3.ViewModels;
+using Lab3.Views;
 
 namespace Lab3
 {
@@ -260,12 +262,17 @@ namespace Lab3
             {
                 return _newCommand ?? (_newCommand = new DelegateCommand(() =>
                 {
-                    //Ændret i exercise 4.4.3
                     var newAgent = new Agent();
-                    Agents.Add(newAgent);
-                    CurrentAgent = newAgent;
-                    //Tilføjet i Exercise 4.5.5
-                    CurrentSpecialityIndex = 0;
+                    var vm = new AgentWindowViewModel("Add new agent", newAgent);
+                    vm.Specialities = specialities;
+                    var dlg = new AgentWindow();
+                    dlg.DataContext = vm;
+                    if (dlg.ShowDialog() == true)
+                    {
+                        Agents.Add(newAgent);
+                        CurrentAgent = newAgent;
+                        CurrentSpecialityIndex = 0;
+                    }
                 }));
             }
         }
@@ -275,6 +282,35 @@ namespace Lab3
         public ICommand DeleteAgentCommand => _deleteCommand ?? (_deleteCommand =
                                                   new DelegateCommand(DeleteAgent, DeleteAgent_CanExecute)
                                                       .ObservesProperty(() => CurrentIndex));
+
+        ICommand _editCommand;
+        public ICommand EditAgentCommand
+        {
+            get
+            {
+                return _editCommand ?? (_editCommand = new DelegateCommand(() =>
+                           {
+                               var tempAgent = CurrentAgent.Clone();
+                               var vm = new AgentWindowViewModel("Edit agent", tempAgent);
+                               vm.Specialities = specialities;
+                               var dlg = new AgentWindow();
+                               dlg.DataContext = vm;
+                               dlg.Owner = App.Current.MainWindow;
+                               if (dlg.ShowDialog() == true)
+                               {
+                                   // Copy values back
+                                   CurrentAgent.ID = tempAgent.ID;
+                                   CurrentAgent.CodeName = tempAgent.CodeName;
+                                   CurrentAgent.Speciality = tempAgent.Speciality;
+                                   CurrentAgent.Assignment = tempAgent.Assignment;
+                               }
+                           },
+                           () => {
+                               return CurrentIndex >= 0;
+                           }
+                       ).ObservesProperty(() => CurrentIndex));
+            }
+        }
 
         private void DeleteAgent()
         {
