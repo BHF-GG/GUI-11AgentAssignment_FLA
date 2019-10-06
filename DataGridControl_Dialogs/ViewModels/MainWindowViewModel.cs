@@ -25,7 +25,6 @@ namespace Lab3
     public class MainWindowViewModel : BindableBase
     {
         private ObservableCollection<Agent> agents;
-        private string filename = "";
         string filePath = "";
         private string AppTitle = "Agent Assignments 5.3";
 
@@ -51,7 +50,6 @@ namespace Lab3
 #endif
             };
             CurrentAgent = null;
-            Title = "Unnamed - " + AppTitle;
 
             //Exercise 4.3.1: Lav comboboks ved specialities
             Specialities = new ObservableCollection<string>
@@ -85,11 +83,37 @@ namespace Lab3
             Clock.Update();
         }
 
-        private string title = "hej";
+        private string filename = "";
+        public string Filename
+        {
+            get { return filename; }
+            set
+            {
+                SetProperty(ref filename, value);
+                RaisePropertyChanged("Title");
+            }
+        }
+
         public string Title
         {
-            get { return title; }
-            set { SetProperty(ref title, value); }
+            get
+            {
+                var s = "";
+                if (Dirty)
+                    s = "*";
+                return filename + s + " - " + AppTitle;
+            }
+        }
+
+        private bool dirty = false;
+        public bool Dirty
+        {
+            get { return dirty; }
+            set
+            {
+                SetProperty(ref dirty, value);
+                RaisePropertyChanged("Title");
+            }
         }
 
         ///     Exercise 4.3.1: Lav comboboks ved specialities
@@ -275,25 +299,24 @@ namespace Lab3
                 return _newCommand ?? (_newCommand = new DelegateCommand(() =>
                 {
                     var newAgent = new Agent();
-                    var vm = new AgentWindowViewModel("Add new agent", newAgent);
-                    vm.Specialities = specialities;
-                    var dlg = new AgentWindow();
-                    dlg.DataContext = vm;
+                    var vm = new AgentWindowViewModel("Add new agent", newAgent)
+                    {
+                        Specialities = specialities
+                    };
+                    var dlg = new AgentWindow
+                    {
+                        DataContext = vm
+                    };
                     if (dlg.ShowDialog() == true)
                     {
                         Agents.Add(newAgent);
                         CurrentAgent = newAgent;
                         CurrentSpecialityIndex = 0;
+                        Dirty = true;
                     }
                 }));
             }
         }
-
-        ICommand _deleteCommand;
-
-        public ICommand DeleteAgentCommand => _deleteCommand ?? (_deleteCommand =
-                                                  new DelegateCommand(DeleteAgent, DeleteAgent_CanExecute)
-                                                      .ObservesProperty(() => CurrentIndex));
 
         ICommand _editCommand;
         public ICommand EditAgentCommand
@@ -303,11 +326,15 @@ namespace Lab3
                 return _editCommand ?? (_editCommand = new DelegateCommand(() =>
                            {
                                var tempAgent = CurrentAgent.Clone();
-                               var vm = new AgentWindowViewModel("Edit agent", tempAgent);
-                               vm.Specialities = specialities;
-                               var dlg = new AgentWindow();
-                               dlg.DataContext = vm;
-                               dlg.Owner = App.Current.MainWindow;
+                               var vm = new AgentWindowViewModel("Edit agent", tempAgent)
+                               {
+                                   Specialities = specialities
+                               };
+                               var dlg = new AgentWindow
+                               {
+                                   DataContext = vm,
+                                   Owner = App.Current.MainWindow
+                               };
                                if (dlg.ShowDialog() == true)
                                {
                                    // Copy values back
@@ -315,6 +342,7 @@ namespace Lab3
                                    CurrentAgent.CodeName = tempAgent.CodeName;
                                    CurrentAgent.Speciality = tempAgent.Speciality;
                                    CurrentAgent.Assignment = tempAgent.Assignment;
+                                   Dirty = true;
                                }
                            },
                            () => {
@@ -324,11 +352,21 @@ namespace Lab3
             }
         }
 
+        ICommand _deleteCommand;
+        public ICommand DeleteAgentCommand => _deleteCommand ?? (_deleteCommand =
+                                                  new DelegateCommand(DeleteAgent, DeleteAgent_CanExecute)
+                                                      .ObservesProperty(() => CurrentIndex));
+
+
         private void DeleteAgent()
         {
-            //Ændret i exercise 4.4.3
-            Agents.Remove(CurrentAgent);
-            // RaisePropertyChanged("Count");
+            MessageBoxResult res = MessageBox.Show("Are you sure you want to delete agent " + CurrentAgent.CodeName +
+                                                   "?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+            if (res == MessageBoxResult.Yes)
+            {
+                Agents.Remove(CurrentAgent);
+                Dirty = true;
+            }
         }
 
         private bool DeleteAgent_CanExecute()
@@ -340,30 +378,58 @@ namespace Lab3
         }
 
         ICommand _closeAppCommand;
-
         public ICommand CloseAppCommand
         {
             get
             {
                 return _closeAppCommand ?? (_closeAppCommand = new DelegateCommand(() =>
                 {
-                    App.Current.MainWindow.Close();
+                    Application.Current.MainWindow.Close();
                 }));
             }
+        }
+
+        ICommand _closingCommand;
+        public ICommand ClosingCommand
+        {
+            get
+            {
+                return _closingCommand ?? (_closingCommand = new
+                           DelegateCommand<CancelEventArgs>(ClosingCommand_Execute));
+            }
+        }
+
+        private void ClosingCommand_Execute(CancelEventArgs arg)
+        {
+            if (Dirty)
+                arg.Cancel = UserRegrets();
+        }
+
+        private bool UserRegrets()
+        {
+            var regret = false;
+            MessageBoxResult res = MessageBox.Show("You have unsaved data. Are you sure you want to close the application without saving data first?",
+                "Warning", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+            if (res == MessageBoxResult.No)
+            {
+                regret = true;
+            }
+            return regret;
         }
 
         ICommand _SaveAsCommand;
         public ICommand SaveAsCommand
         {
-            get { return _SaveAsCommand ?? (_SaveAsCommand = new DelegateCommand(SaveAsCommand_Execute)); }
+            get { return _SaveAsCommand ?? (_SaveAsCommand = new DelegateCommand<string>(SaveAsCommand_Execute)); }
         }
 
-        private void SaveAsCommand_Execute()
+        private void SaveAsCommand_Execute(string argFilename)
         {
-            var dialog = new SaveFileDialog();
-
-            dialog.Filter = "Agent assignment documents|*.agn|All Files|*.*";
-            dialog.DefaultExt = "agn";
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Agent assignment documents|*.agn|All Files|*.*",
+                DefaultExt = "agn"
+            };
             if (filePath == "")
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             else
@@ -372,9 +438,8 @@ namespace Lab3
             if (dialog.ShowDialog(App.Current.MainWindow) == true)
             {
                 filePath = dialog.FileName;
-                filename = Path.GetFileName(filePath);
+                Filename = Path.GetFileName(filePath);
                 SaveFile();
-                Title = filename + " - " + AppTitle;
             }
         }
 
@@ -403,6 +468,7 @@ namespace Lab3
             try
             {
                 Repository.SaveFile(filePath, Agents);
+                Dirty = false;
             }
             catch (Exception ex)
             {
@@ -420,23 +486,30 @@ namespace Lab3
 
         private void NewFileCommand_Execute()
         {
-            Agents.Clear();
-            filename = "";
-            Title = "Unnamed - " + AppTitle;
+            MessageBoxResult res = MessageBox.Show("Any unsaved data will be lost. Are you sure you want to initiate a new file?", "Warning",
+                MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+            if (res == MessageBoxResult.Yes)
+            {
+                Agents.Clear();
+                Filename = "";
+                Dirty = false;
+            }
         }
+
 
         ICommand _OpenFileCommand;
         public ICommand OpenFileCommand
         {
-            get { return _OpenFileCommand ?? (_OpenFileCommand = new DelegateCommand(OpenFileCommand_Execute)); }
+            get { return _OpenFileCommand ?? (_OpenFileCommand = new DelegateCommand<string>(OpenFileCommand_Execute)); }
         }
 
-        private void OpenFileCommand_Execute()
+        private void OpenFileCommand_Execute(string argFilename)
         {
-            var dialog = new OpenFileDialog();
-
-            dialog.Filter = "Agent assignment documents|*.agn|All Files|*.*";
-            dialog.DefaultExt = "agn";
+            var dialog = new OpenFileDialog
+            {
+                Filter = "Agent assignment documents|*.agn|All Files|*.*",
+                DefaultExt = "agn"
+            };
             if (filePath == "")
                 dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             else
@@ -445,13 +518,12 @@ namespace Lab3
             if (dialog.ShowDialog(App.Current.MainWindow) == true)
             {
                 filePath = dialog.FileName;
-                filename = Path.GetFileName(filePath);
+                Filename = Path.GetFileName(filePath);
                 try
                 {
-                    ObservableCollection<Agent> tempAgents;
-                    Repository.ReadFile(filePath, out tempAgents);
+                    Repository.ReadFile(filePath, out ObservableCollection<Agent> tempAgents);
                     Agents = tempAgents;
-                    Title = filename + " - " + AppTitle;
+                    Dirty = false;
                 }
                 catch (Exception ex)
                 {

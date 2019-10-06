@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lab3"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:interactivity="http://prismlibrary.com/"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="450" Width="800"
         Background="{DynamicResource ResourceKey=BackgroundBrush}">
@@ -12,6 +13,11 @@
     <Window.DataContext>
         <local:MainWindowViewModel />
     </Window.DataContext>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <interactivity:InvokeCommandAction Command="{Binding ClosingCommand}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
 
     <Window.Resources>
         <!--Label style, som automatisk anvendes på alle labels. 
