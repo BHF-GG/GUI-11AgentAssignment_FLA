@@ -39,14 +39,14 @@
                  Width="282"
                  Text="{Binding Path=CurrentAgent.ID}"
                  Style="{StaticResource JamesStyle}"
-                 IsReadOnly="True" Grid.Column="1"
+                 Grid.Column="1"
         />
         <TextBox Height="23" Padding="2" 
                  Name="textBox2" 
                  Text="{Binding Path=CurrentAgent.CodeName}" 
                  Style="{StaticResource InputStyle}" 
                  Grid.Column="1"
-                 IsReadOnly="True" Margin="10.8,5.8,10.4,0" Grid.Row="1"/>
+                 Margin="10.8,5.8,10.4,0" Grid.Row="1"/>
         <TextBox Margin="10.8,7.4,10.4,0" 
                  Name="textBox4" 
                  Text="{Binding Path=CurrentAgent.Assignment}" 
@@ -55,7 +55,7 @@
                  TextWrapping="Wrap"
                  VerticalAlignment="Top" Grid.Row="3" 
                  Style="{StaticResource InputStyle}" Grid.Column="1"
-                 IsReadOnly="True"/>
+                 />
         <ComboBox Margin="10.8,5.6,10.4,0"
                   SelectedItem="{Binding Path=CurrentAgent.Speciality}"
                   ItemsSource="{Binding Path=Specialities}"
